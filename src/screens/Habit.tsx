@@ -32,7 +32,7 @@ export function Habit() {
         </Text>
 
         <Text className="text-white font-extrabold text-3xl">
-          {dayOfWeek}
+          {dayAndMonth}
         </Text>
 
         <ProgressBar progress={30} />
