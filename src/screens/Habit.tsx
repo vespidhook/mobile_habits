@@ -1,22 +1,76 @@
-import { View, ScrollView, Text } from "react-native";
+import { View, ScrollView, Text, Alert } from "react-native";
 import { useRoute } from '@react-navigation/native';
 import dayjs from 'dayjs';   
 
 import { BackButton } from "../components/BackButton";
 import { ProgressBar } from "../components/ProgressBar";
 import { Checkbox } from "../components/Checkbox";
+import { useState, useEffect } from "react";
+import { Loading } from "../components/Loading";
+import { api } from "../lib/axios";
+import  
 
 interface Params {
   date: string;
 }
 
+interface DayInfoProps {
+  completedHabits: string[];
+  possibleHabits:{
+    id: string;
+    title: string;
+    length: any
+    map: any
+  }
+}
+
 export function Habit() {
+  const [loading, setLoading] = useState(true);
+  const [dayInfo, setDayInfo] = useState<DayInfoProps | null>(null);
+  const [completedHabits, setCompletedHabits] = useState<string[]>([]);
+
   const route = useRoute();
   const { date } = route.params as Params;
 
   const parsedDate = dayjs(date);
   const dayOfWeek = parsedDate.format('dddd');
   const dayAndMonth = parsedDate.format('DD/MM');
+
+  const habitsProgress = dayInfo?.possibleHabits.length ? : 0;
+
+  async function fetchHabits() {
+    try {
+      setLoading(true);
+      
+      const response = await api.get('/day', { params: { date }});
+      setDayInfo(response.data);
+      setCompletedHabits(response.data.completedHabits)
+      
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Ops', 'Não foi possivel carrregar as informações dos hábitos');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleToggleHabit(habitId: string) {
+    if(completedHabits.includes(habitId)) {
+      setCompletedHabits(prevState => prevState.filter(habit => habit !== habitId))
+    } else {
+      setCompletedHabits(prevState => [...prevState, habitId]);
+    }
+  }
+
+  useEffect(() => {
+    fetchHabits();
+  },[]);
+
+  if (loading) {
+    return (
+      <Loading />
+    );
+  }
 
   return (
     <View className="flex-1 bg-background px-8 pt-16">
@@ -38,15 +92,17 @@ export function Habit() {
         <ProgressBar progress={30} />
 
         <View className="mt-6">
-          <Checkbox 
-            title="Ler 1 capítulo de livro"
-            checked={false}
-          />
-
-          <Checkbox 
-            title="Beber 2L de água"
-            checked={false}
-          />
+          {
+            dayInfo?.possibleHabits &&
+            dayInfo?.possibleHabits.map(habit => (
+              <Checkbox 
+              key={habit.id}
+              title={habit.title}
+              checked={completedHabits.includes(habit.id)}
+              onPress={() => handleToggleHabit(habit.id)}
+            />
+            ))        
+          }          
         </View>
       </ScrollView>
 
