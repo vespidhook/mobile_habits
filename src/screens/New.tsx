@@ -4,6 +4,7 @@ import { BackButton } from "../components/BackButton";
 import { Checkbox } from "../components/Checkbox";
 import { Feather } from '@expo/vector-icons';
 import colors from "tailwindcss/colors";
+import { api } from "../lib/axios";
  
 const availableWeekDays = [
   'Domingo',
@@ -33,7 +34,12 @@ export function New() {
         Alert.alert('Novo Hábito', 'Informe o nome do hábito e escolha a periodicidade')
       }
 
-      await api.post('')
+      await api.post('/habits', { title,weekDays });
+
+      setTitle('');
+      setWeekDays([]);
+
+      Alert.alert('Novo Hábito', 'Hábito criado com sucesso')
     } catch (error) {
       console.log(error);
       Alert.alert('Ops', 'Não foi possivel criar o novo hábito')
